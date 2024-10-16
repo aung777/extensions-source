@@ -47,7 +47,7 @@ abstract class MangaThemesia(
 
     // Pengaturan preferensi
     private val preferences: SharedPreferences by lazy {
-        Injekt.get<Application>().getSharedPreferences("source_$id", 0)
+        Injekt.get<Application>().getSharedPreferences("source_$id", Application.MODE_PRIVATE)
     }
 
     private val BASE_URL_PREF = "baseUrlPref"

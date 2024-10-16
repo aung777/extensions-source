@@ -15,7 +15,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import okhttp3.Request
 import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -49,37 +48,12 @@ class TukangKomik :
     }
 
     override fun getFilterList(): FilterList {
-        val filters = mutableListOf<Filter<*>>(
-            Filter.Header("Note: Can't be used with text search!"),
-            Filter.Separator(),
-            StatusFilter(intl["status_filter_title"], statusOptions),
-            TypeFilter(intl["type_filter_title"], typeFilterOptions),
-            OrderByFilter(intl["order_by_filter_title"], orderByFilterOptions),
+        return FilterList(
+            Filter.Header("Note: Can't be used with text search!")
         )
-        if (!genrelist.isNullOrEmpty()) {
-            filters.addAll(
-                listOf(
-                    Filter.Header(intl["genre_exclusion_warning"]),
-                    GenreListFilter(intl["genre_filter_title"], getGenreList()),
-                ),
-            )
-        } else {
-            filters.add(Filter.Header(intl["genre_missing_warning"]))
-        }
-        if (hasProjectPage) {
-            filters.addAll(
-                mutableListOf<Filter<*>>(
-                    Filter.Separator(),
-                    Filter.Header(intl["project_filter_warning"]),
-                    Filter.Header(intl.format("project_filter_name", name)),
-                    ProjectFilter(intl["project_filter_title"], projectFilterOptions),
-                ),
-            )
-        }
-        return FilterList(filters)
     }
 
-        override fun pageListParse(document: Document): List<Page> {
+    override fun pageListParse(document: Document): List<Page> {
         val scriptContent = document.selectFirst("script:containsData(ts_reader)")?.data()
             ?: return super.pageListParse(document)
         val jsonString = scriptContent.substringAfter("ts_reader.run(").substringBefore(");")
@@ -112,7 +86,6 @@ class TukangKomik :
 
     @Serializable
     data class ReaderImageSource(
-        val source: String,
         val images: List<String>,
     )
 
@@ -120,5 +93,6 @@ class TukangKomik :
         private const val BASE_URL_PREF_TITLE = "Ubah Domain"
         private const val BASE_URL_PREF = "overrideBaseUrl"
         private const val BASE_URL_PREF_SUMMARY = "Update domain untuk ekstensi ini"
+        private const val RESTART_APP = "Harap restart aplikasi untuk menerapkan perubahan."
     }
 }

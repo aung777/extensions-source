@@ -47,12 +47,27 @@ abstract class MangaThemesia(
 
     // Pengaturan preferensi
     private val preferences: SharedPreferences by lazy {
-        Injekt.get<Application>().getSharedPreferences("source_$id", 0x0000)
+        Injekt.get<Application>().getSharedPreferences("source_$id", 0)
     }
+
+    private val BASE_URL_PREF = "baseUrlPref"
+    private val DEFAULT_BASE_URL_PREF = "defaultBaseUrlPref"
 
     // Override base URL dari preferensi
     override val baseUrl: String
         get() = preferences.getString(BASE_URL_PREF, super.baseUrl) ?: super.baseUrl
+
+    init {
+        // Set default base URL jika tidak diset
+        preferences.getString(DEFAULT_BASE_URL_PREF, null)?.let { prefDefaultBaseUrl ->
+            if (prefDefaultBaseUrl != super.baseUrl) {
+                preferences.edit()
+                    .putString(BASE_URL_PREF, super.baseUrl)
+                    .putString(DEFAULT_BASE_URL_PREF, super.baseUrl)
+                    .apply()
+            }
+        }
+    }
 
     override val supportsLatest = true
 
@@ -70,6 +85,25 @@ abstract class MangaThemesia(
     )
 
     open val projectPageString = "/project"
+
+    // Setup tampilan preferensi
+    override fun setupPreferenceScreen(screen: PreferenceScreen) {
+        val baseUrlPref = EditTextPreference(screen.context).apply {
+            key = BASE_URL_PREF
+            title = "Change Domain"
+            summary = "Set the base URL for the source"
+            setDefaultValue(super.baseUrl)
+            dialogTitle = "Enter Domain"
+            dialogMessage = "Default: ${super.baseUrl}"
+
+            setOnPreferenceChangeListener { _, _ ->
+                Toast.makeText(screen.context, "Restart the app to apply changes.", Toast.LENGTH_LONG).show()
+                true
+            }
+        }
+        screen.addPreference(baseUrlPref)
+    }
+}
 
     // Mengatur preferensi
     fun setupPreferenceScreen(screen: PreferenceScreen) {

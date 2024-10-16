@@ -96,38 +96,13 @@ abstract class MangaThemesia(
             dialogTitle = "Enter Domain"
             dialogMessage = "Default: ${super.baseUrl}"
 
-            setOnPreferenceChangeListener { _, _ ->
+            setOnPreferenceChangeListener { _, newValue ->
                 Toast.makeText(screen.context, "Restart the app to apply changes.", Toast.LENGTH_LONG).show()
+                preferences.edit().putString(BASE_URL_PREF, newValue.toString()).apply()
                 true
             }
         }
         screen.addPreference(baseUrlPref)
-    }
-}
-
-    // Mengatur preferensi
-    fun setupPreferenceScreen(screen: PreferenceScreen) {
-        val baseUrlPref = EditTextPreference(screen.context).apply {
-            key = BASE_URL_PREF
-            title = BASE_URL_PREF_TITLE
-            summary = BASE_URL_PREF_SUMMARY
-            setDefaultValue(super.baseUrl)
-            dialogTitle = BASE_URL_PREF_TITLE
-            dialogMessage = "Default: ${super.baseUrl}"
-
-            setOnPreferenceChangeListener { _, _ ->
-                Toast.makeText(screen.context, RESTART_APP, Toast.LENGTH_LONG).show()
-                true
-            }
-        }
-        screen.addPreference(baseUrlPref)
-    }
-
-    companion object {
-        private const val BASE_URL_PREF_TITLE = "Ubah Domain"
-        private const val BASE_URL_PREF = "overrideBaseUrl"
-        private const val BASE_URL_PREF_SUMMARY = "Untuk penggunaan sementara. Memperbarui aplikasi akan menghapus pengaturan"
-        private const val RESTART_APP = "Untuk menerapkan perubahan, restart aplikasi."
     }
 }
 

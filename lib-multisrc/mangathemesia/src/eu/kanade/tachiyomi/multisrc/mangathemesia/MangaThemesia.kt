@@ -34,59 +34,51 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-// Formerly WPMangaStream & WPMangaReader -> MangaThemesia
 abstract class MangaThemesia(
     override val name: String,
     baseUrl: String,
     final override val lang: String,
     val mangaUrlDirectory: String = "/manga",
-    val dateFormat: SimpleDateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.US),
+    val dateFormat: SimpleDateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.US)
 ) : ParsedHttpSource() {
 
     protected open val json: Json by injectLazy()
 
-    // Pengaturan preferensi
     private val preferences: SharedPreferences by lazy {
         Injekt.get<Application>().getSharedPreferences("source_$id", Application.MODE_PRIVATE)
     }
 
-    private val BASE_URL_PREF = "baseUrlPref"
-    private val DEFAULT_BASE_URL_PREF = "defaultBaseUrlPref"
+    private companion object {
+        const val BASE_URL_PREF = "baseUrlPref"
+        const val DEFAULT_BASE_URL_PREF = "defaultBaseUrlPref"
+    }
 
-    // Override base URL dari preferensi
     override val baseUrl: String
         get() = preferences.getString(BASE_URL_PREF, super.baseUrl) ?: super.baseUrl
 
     init {
-        // Set default base URL jika tidak diset
         preferences.getString(DEFAULT_BASE_URL_PREF, null)?.let { prefDefaultBaseUrl ->
             if (prefDefaultBaseUrl != super.baseUrl) {
-                preferences.edit()
-                    .putString(BASE_URL_PREF, super.baseUrl)
-                    .putString(DEFAULT_BASE_URL_PREF, super.baseUrl)
-                    .apply()
+                preferences.edit().putString(BASE_URL_PREF, super.baseUrl)
+                    .putString(DEFAULT_BASE_URL_PREF, super.baseUrl).apply()
             }
         }
     }
 
     override val supportsLatest = true
-
     override val client = network.cloudflareClient
 
-    // Menambahkan header yang diperlukan
-    override fun headersBuilder() = super.headersBuilder()
-        .set("Referer", "$baseUrl/")
+    override fun headersBuilder() = super.headersBuilder().set("Referer", "$baseUrl/")
 
     protected val intl = Intl(
         language = lang,
         baseLanguage = "en",
         availableLanguages = setOf("en", "es"),
-        classLoader = javaClass.classLoader!!,
+        classLoader = javaClass.classLoader!!
     )
 
     open val projectPageString = "/project"
 
-    // Setup tampilan preferensi
     override fun setupPreferenceScreen(screen: PreferenceScreen) {
         val baseUrlPref = EditTextPreference(screen.context).apply {
             key = BASE_URL_PREF

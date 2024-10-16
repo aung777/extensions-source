@@ -92,7 +92,8 @@ abstract class MangaThemesia(
             dialogMessage = "Default: ${super.baseUrl}"
 
             setOnPreferenceChangeListener { _, newValue ->
-                Toast.makeText(screen.context, "Restart the app to apply changes.", Toast.LENGTH_LONG).show()
+                // Ubah pesan Toast untuk memperbarui konteks
+                Toast.makeText(screen.context, "Silakan restart aplikasi untuk menerapkan perubahan baru.", Toast.LENGTH_LONG).show()
                 preferences.edit().putString(BASE_URL_PREF, newValue.toString()).apply()
                 true
             }

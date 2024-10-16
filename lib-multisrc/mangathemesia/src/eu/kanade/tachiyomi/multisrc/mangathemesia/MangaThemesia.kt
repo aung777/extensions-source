@@ -1,12 +1,8 @@
 package eu.kanade.tachiyomi.multisrc.mangathemesia
 
-import android.app.Application
-import android.content.SharedPreferences
-import android.widget.Toast
-import androidx.preference.EditTextPreference
-import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.lib.i18n.Intl
 import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
@@ -22,85 +18,45 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.FormBody
 import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Request
 import okhttp3.Response
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import rx.Observable
-import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.injectLazy
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+// Formerly WPMangaStream & WPMangaReader -> MangaThemesia
 abstract class MangaThemesia(
     override val name: String,
-    baseUrl: String,
+    override val baseUrl: String,
     final override val lang: String,
     val mangaUrlDirectory: String = "/manga",
-    val dateFormat: SimpleDateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.US)
+    val dateFormat: SimpleDateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.US),
 ) : ParsedHttpSource() {
 
     protected open val json: Json by injectLazy()
 
-    private val preferences: SharedPreferences by lazy {
-        Injekt.get<Application>().getSharedPreferences("source_$id", Application.MODE_PRIVATE)
-    }
-
-    private companion object {
-        const val BASE_URL_PREF = "baseUrlPref"
-        const val DEFAULT_BASE_URL_PREF = "defaultBaseUrlPref"
-    }
-
-    override val baseUrl: String
-        get() = preferences.getString(BASE_URL_PREF, super.baseUrl) ?: super.baseUrl
-
-    init {
-        preferences.getString(DEFAULT_BASE_URL_PREF, null)?.let { prefDefaultBaseUrl ->
-            if (prefDefaultBaseUrl != super.baseUrl) {
-                preferences.edit().apply {
-                    putString(BASE_URL_PREF, super.baseUrl)
-                    putString(DEFAULT_BASE_URL_PREF, super.baseUrl)
-                    apply()
-                }
-            }
-        }
-    }
-
     override val supportsLatest = true
+
     override val client = network.cloudflareClient
 
-    override fun headersBuilder() = super.headersBuilder().set("Referer", "$baseUrl/")
+    override fun headersBuilder() = super.headersBuilder()
+        .set("Referer", "$baseUrl/")
 
     protected val intl = Intl(
         language = lang,
         baseLanguage = "en",
         availableLanguages = setOf("en", "es"),
-        classLoader = javaClass.classLoader!!
+        classLoader = javaClass.classLoader!!,
     )
 
     open val projectPageString = "/project"
-
-    override fun setupPreferenceScreen(screen: PreferenceScreen) {
-        val baseUrlPref = EditTextPreference(screen.context).apply {
-            key = BASE_URL_PREF
-            title = "Change Domain"
-            summary = "Set the base URL for the source"
-            setDefaultValue(super.baseUrl)
-            dialogTitle = "Enter Domain"
-            dialogMessage = "Default: ${super.baseUrl}"
-
-            setOnPreferenceChangeListener { _, newValue ->
-                // Ubah pesan Toast untuk memperbarui konteks
-                Toast.makeText(screen.context, "Silakan restart aplikasi untuk menerapkan perubahan baru.", Toast.LENGTH_LONG).show()
-                preferences.edit().putString(BASE_URL_PREF, newValue.toString()).apply()
-                true
-            }
-        }
-        screen.addPreference(baseUrlPref)
-    }
-}
 
     // Popular (Search with popular order and nothing else)
     override fun popularMangaRequest(page: Int) = searchMangaRequest(page, "", popularFilter)

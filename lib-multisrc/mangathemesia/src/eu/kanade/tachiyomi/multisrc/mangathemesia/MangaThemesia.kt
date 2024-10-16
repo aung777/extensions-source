@@ -59,8 +59,11 @@ abstract class MangaThemesia(
     init {
         preferences.getString(DEFAULT_BASE_URL_PREF, null)?.let { prefDefaultBaseUrl ->
             if (prefDefaultBaseUrl != super.baseUrl) {
-                preferences.edit().putString(BASE_URL_PREF, super.baseUrl)
-                    .putString(DEFAULT_BASE_URL_PREF, super.baseUrl).apply()
+                preferences.edit().apply {
+                    putString(BASE_URL_PREF, super.baseUrl)
+                    putString(DEFAULT_BASE_URL_PREF, super.baseUrl)
+                    apply()
+                }
             }
         }
     }

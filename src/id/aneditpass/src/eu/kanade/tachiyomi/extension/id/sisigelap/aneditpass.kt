@@ -53,6 +53,20 @@ class AnEditPass :
                 true
             }
         }
+          val otherOpsi = androidx.preference.EditTextPreference(screen.context).apply {
+            key = "Pengingat"
+            title = "judul"
+            summary = "ringkasan"
+            setDefaultValue("defaultnya")
+            dialogTitle = "dialog judul"
+            dialogMessage = "Default: "
+
+            setOnPreferenceChangeListener { _, _ ->
+                Toast.makeText(screen.context, RESTART_APP, Toast.LENGTH_LONG).show()
+                true
+            }
+        }
+        screen.addPreference(otherOpsi)
         screen.addPreference(baseUrlPref)
     }
 
